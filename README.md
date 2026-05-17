@@ -24,6 +24,7 @@ make test-controller       # exercice 1
 make test-service          # exercice 2
 make test-repository       # exercice 3
 make test-processor        # exercice 4
+make test-calculator       # exercice 5
 make shell                 # bash interactif dans le container
 ```
 
@@ -94,14 +95,45 @@ make test-processor
 
 ---
 
+### Exercice 5 — Le calculateur de remise
+
+**Fichiers** :
+- `src/Calculator/OrderDiscountCalculator.php`
+- `tests/Calculator/OrderDiscountCalculatorTest.php`
+
+Le contrat métier avec la finance définit les paliers de remise :
+
+| Total commande | Remise |
+|----------------|--------|
+| ≥ 500 EUR      | 15 %   |
+| ≥ 200 EUR      | 10 %   |
+| ≥ 100 EUR      | 5 %    |
+| < 100 EUR      | 0 %    |
+
+Les 4 tests passent. La finance se plaint que les grosses commandes ne reçoivent pas la bonne remise.
+
+**Mission** :
+1. Lancer le test, constater qu'il est vert.
+2. Vérifier la remise réellement appliquée pour une commande de 800 EUR.
+3. Refactor le test pour qu'il attrape un écart avec le contrat métier.
+
+```bash
+make test-calculator
+```
+
+> Lecture recommandée : [Randy Coulman — Tautological tests](https://randycoulman.com/blog/2016/12/20/tautological-tests/)
+
+---
+
 ## Structure
 
 ```
 src/
-├── Controller/OrderController.php      # exo 1
-├── Service/OrderImporter.php           # exo 2
-├── Repository/OrderRepository.php      # exo 3
-├── Processor/OrderProcessor.php        # exo 4
+├── Controller/OrderController.php           # exo 1
+├── Service/OrderImporter.php                # exo 2
+├── Repository/OrderRepository.php           # exo 3
+├── Processor/OrderProcessor.php             # exo 4
+├── Calculator/OrderDiscountCalculator.php   # exo 5
 └── Entity/Order.php
 
 tests/
@@ -109,7 +141,8 @@ tests/
 ├── Service/OrderImporterTest.php
 ├── Repository/OrderRepositoryMockTest.php
 ├── Repository/OrderRepositoryIntegrationTest.php
-└── Processor/OrderProcessorTest.php
+├── Processor/OrderProcessorTest.php
+└── Calculator/OrderDiscountCalculatorTest.php
 
 database/
 ├── schema.sql      # versionné dans le repo

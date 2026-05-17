@@ -29,5 +29,8 @@ test-repository: ## Exercice 3 — Repository (mocké + intégration)
 test-processor: ## Exercice 4 — Processor (test fragile)
 	$(DC) vendor/bin/phpunit --testsuite processor
 
+test-calculator: ## Exercice 5 — Calculator (test tautologique pur)
+	$(DC) vendor/bin/phpunit --testsuite calculator
+
 shell: ## Ouvre un shell dans le container PHP
 	$(DC) bash

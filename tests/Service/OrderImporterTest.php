@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Service;
 
 use App\Entity\Order;
+use App\Repository\OrderRepository;
 use App\Service\OrderImporter;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +18,7 @@ final class OrderImporterTest extends TestCase
     use ProphecyTrait;
 
     #[Test]
-    public function importsOrderFromExternalPayload(): void
+    public function importsOrderFromExternalPayloadAndSavesIt(): void
     {
         $json = <<<'JSON'
         {
@@ -32,7 +33,13 @@ final class OrderImporterTest extends TestCase
         $serializer->deserialize(Argument::cetera())
             ->willReturn(new Order(1, 'John', 100.0, 'CONFIRMED'));
 
-        $importer = new OrderImporter($serializer->reveal());
+        $repository = $this->prophesize(OrderRepository::class);
+        $repository->save(Argument::type(Order::class))->willReturn(null);
+
+        $importer = new OrderImporter(
+            $serializer->reveal(),
+            $repository->reveal(),
+        );
 
         $order = $importer->importFromJson($json);
 
@@ -40,5 +47,6 @@ final class OrderImporterTest extends TestCase
             new Order(1, 'John', 100.0, 'CONFIRMED'),
             $order,
         );
+        $repository->save(Argument::type(Order::class))->shouldHaveBeenCalled();
     }
 }

@@ -29,6 +29,9 @@
         <testsuite name="processor">
             <directory>tests/Processor</directory>
         </testsuite>
+        <testsuite name="calculator">
+            <directory>tests/Calculator</directory>
+        </testsuite>
     </testsuites>
 
     <source>
