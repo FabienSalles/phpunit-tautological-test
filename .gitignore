@@ -1,0 +1,15 @@
+/vendor/
+/var/cache/
+/var/log/
+/.phpunit.cache/
+/.php-cs-fixer.cache
+composer.lock
+.idea/
+.vscode/
+.DS_Store
+.env.local
+.env.local.php
+.env.*.local
+
+# La DB est régénérée par bin/init-db.php avant chaque run de tests
+/database/data.db
