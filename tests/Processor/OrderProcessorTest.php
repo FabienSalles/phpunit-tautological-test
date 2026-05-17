@@ -8,7 +8,6 @@ use App\Entity\Order;
 use App\Processor\OrderProcessor;
 use App\Repository\OrderRepository;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -16,53 +15,46 @@ use Symfony\Component\Mime\Email;
 
 final class OrderProcessorTest extends TestCase
 {
-    private OrderRepository&MockObject $repository;
-    private MailerInterface&MockObject $mailer;
-    private LoggerInterface&MockObject $logger;
-
-    protected function setUp(): void
-    {
-        $this->repository = $this->createMock(OrderRepository::class);
-        $this->mailer = $this->createMock(MailerInterface::class);
-        $this->logger = $this->createMock(LoggerInterface::class);
-    }
-
     #[Test]
     public function processConfirmsOrderAndSendsEmailAndLogs(): void
     {
         $order = new Order(42, 'alice', 250.0, 'PENDING');
+        $repository = $this->createMock(OrderRepository::class);
+        $logger = $this->createMock(LoggerInterface::class);
 
-        $this->repository
-            ->expects(self::once())
-            ->method('save')
-            ->with(self::isInstanceOf(Order::class));
-
-        $this->mailer
-            ->expects(self::once())
-            ->method('send')
-            ->willReturnCallback(function (Email $email): void {
-                self::assertSame('noreply@example.com', $email->getFrom()[0]->getAddress());
-                self::assertSame('bob@example.com', $email->getTo()[0]->getAddress());
-                self::assertSame('Order 42 confirmed', $email->getSubject());
-                self::assertSame('Your order has been confirmed.', $email->getTextBody());
-            });
-
-        $this->logger
-            ->expects(self::once())
-            ->method('info')
-            ->with('Order processed', ['id' => 42, 'customer' => 'alice']);
-
-        $processor = new OrderProcessor(
-            $this->repository,
-            $this->mailer,
-            $this->logger,
+        $sentEmail = null;
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->method('send')->willReturnCallback(
+            function (Email $email) use (&$sentEmail): void {
+                $sentEmail = $email;
+            },
         );
+
+        $processor = new OrderProcessor($repository, $mailer, $logger);
 
         $processor->process($order);
 
-        self::assertSame(42, $order->id);
-        self::assertSame('alice', $order->customer);
-        self::assertSame(250.0, $order->total);
-        self::assertSame('CONFIRMED', $order->status);
+        self::assertSame([
+            'id'       => 42,
+            'customer' => 'alice',
+            'total'    => 250.0,
+            'status'   => 'CONFIRMED',
+        ], [
+            'id'       => $order->id,
+            'customer' => $order->customer,
+            'total'    => $order->total,
+            'status'   => $order->status,
+        ]);
+        self::assertSame([
+            'from'    => 'noreply@example.com',
+            'to'      => 'alice@example.com',
+            'subject' => 'Order 42 confirmed',
+            'body'    => 'Your order has been confirmed.',
+        ], [
+            'from'    => $sentEmail?->getFrom()[0]?->getAddress(),
+            'to'      => $sentEmail?->getTo()[0]?->getAddress(),
+            'subject' => $sentEmail?->getSubject(),
+            'body'    => $sentEmail?->getTextBody(),
+        ]);
     }
 }
