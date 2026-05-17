@@ -15,18 +15,6 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 
-/**
- * Exercice 4 — Ce test échoue. Le code de production fonctionne pourtant.
- *
- * Le test est sur-contraint : il vérifie exactement chaque appel à chaque
- * dépendance avec des paramètres rigides, mélange Arrange et Assert,
- * utilise des `expects($this->once())` en chaîne, et casse à la moindre
- * modification du code source qui n'altère pourtant pas le comportement.
- *
- * Mission : refactor le test pour le rendre robuste, lisible, et qu'il
- * teste le COMPORTEMENT (la commande est confirmée et un email part)
- * plutôt que les détails d'implémentation.
- */
 final class OrderProcessorTest extends TestCase
 {
     use ProphecyTrait;
@@ -50,12 +38,10 @@ final class OrderProcessorTest extends TestCase
     {
         $order = new Order(42, 'alice', 250.0, 'PENDING');
 
-        // Attentes posées AVANT l'act, types exacts requis...
         $this->repository
             ->save(Argument::type(Order::class))
             ->shouldBeCalledTimes(1);
 
-        // ...l'email doit être STRICTEMENT cet objet (sur-spécifié)
         $expectedEmail = (new Email())
             ->from('noreply@example.com')
             ->to('alice@example.com')
@@ -66,7 +52,6 @@ final class OrderProcessorTest extends TestCase
             ->send($expectedEmail)
             ->shouldBeCalledTimes(1);
 
-        // Le logger doit être appelé EXACTEMENT comme ça
         $this->logger
             ->info('Order processed', ['id' => 42])
             ->shouldBeCalledTimes(1);
@@ -79,7 +64,6 @@ final class OrderProcessorTest extends TestCase
 
         $processor->process($order);
 
-        // Re-vérification redondante après l'act (au cas où)
         $this->repository->save(Argument::type(Order::class))->shouldHaveBeenCalled();
         $this->mailer->send($expectedEmail)->shouldHaveBeenCalled();
         $this->logger->info('Order processed', ['id' => 42])->shouldHaveBeenCalled();

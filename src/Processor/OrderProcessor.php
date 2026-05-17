@@ -12,8 +12,6 @@ use Symfony\Component\Mime\Email;
 
 /**
  * Traite une commande : la marque confirmée, envoie un email, logue.
- *
- * Le code est correct. C'est le TEST qui est fragile (cf. tests/Processor/).
  */
 final class OrderProcessor
 {

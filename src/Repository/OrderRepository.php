@@ -28,13 +28,6 @@ final class OrderRepository extends ServiceEntityRepository
     /**
      * Récupère les commandes avec un statut donné.
      *
-     * BUG INTENTIONNEL : le champ utilisé dans le WHERE est `statu` au lieu de `status`.
-     * Un test qui mocke le QueryBuilder ne le voit pas — il vérifie juste que
-     * les méthodes du builder sont appelées, pas que la requête SQL est valide.
-     *
-     * Un test d'intégration avec une vraie base SQLite échoue immédiatement
-     * (DBALException : "no such column: o.statu").
-     *
      * @return list<Order>
      */
     public function findByStatus(string $status): array

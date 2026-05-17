@@ -14,9 +14,6 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
-/**
- * Exercice 1 — Le test est vert. Pourquoi devrait-il être rouge ?
- */
 final class OrderControllerTest extends TestCase
 {
     use ProphecyTrait;
@@ -42,7 +39,6 @@ final class OrderControllerTest extends TestCase
         $response = $controller->confirm(1);
         $payload = json_decode((string) $response->getContent(), true);
 
-        // ⚠️ On compare avec la constante du code — le test passe quoi qu'il arrive.
         self::assertSame(OrderController::STATUS_CONFIRMED, $payload['status']);
     }
 }

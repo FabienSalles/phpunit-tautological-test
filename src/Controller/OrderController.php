@@ -13,14 +13,6 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 final class OrderController
 {
-    /**
-     * Statut renvoyé par l'API quand une commande est confirmée.
-     *
-     * BUG INTENTIONNEL : le contrat avec les consommateurs de l'API attend `CONFIRMED`,
-     * mais la constante a été modifiée en `PAID` (typo lors d'un refacto).
-     * Le test du contrôleur compare avec `self::STATUS_CONFIRMED` au lieu d'un littéral,
-     * donc il continue de passer (tautologique).
-     */
     public const STATUS_CONFIRMED = 'PAID';
 
     public function __construct(

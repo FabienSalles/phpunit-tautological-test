@@ -31,51 +31,45 @@ make shell                 # bash interactif dans le container
 
 ## Les 4 exercices
 
-### Exercice 1 — Le test est vert. Il ne devrait pas l'être.
+### Exercice 1 — Le test du contrôleur passe. Devrait-il ?
 
 **Fichier** : `tests/Controller/OrderControllerTest.php`
 
-Le test du contrôleur passe. Pourtant le contrat API attendu par les consommateurs (`status: "CONFIRMED"`) n'est plus respecté.
+Le contrat de l'API avec ses consommateurs : quand une commande est confirmée, le champ `status` de la réponse JSON vaut `"CONFIRMED"`.
 
-**Mission** : lancer le test, comprendre pourquoi il est vert, corriger.
+**Mission** : lancer le test, vérifier que le contrat est bien respecté.
 
 ```bash
 make test-controller
 ```
 
-> Indice : regardez ce que compare l'assertion finale.
-
 ---
 
-### Exercice 2 — Le test est vert. La désérialisation est cassée.
+### Exercice 2 — Le service importe-t-il vraiment la commande ?
 
 **Fichier** : `tests/Service/OrderImporterTest.php`
 
-L'API externe envoie un JSON avec `customerName`. L'entité s'attend à `customer`. En production, l'objet `Order` désérialisé a un `$customer` vide. Pourtant le test est vert.
+`OrderImporter::importFromJson()` doit transformer le payload JSON reçu de l'API externe en entité `Order`.
 
-**Mission** : trouver pourquoi le bug ne remonte pas dans le test, et corriger le test pour qu'il l'attrape.
+**Mission** : lancer le test, vérifier qu'en production l'objet retourné est bien rempli.
 
 ```bash
 make test-service
 ```
 
-> Indice : que retourne le serializer dans le test ?
-
 ---
 
-### Exercice 3 — Comprendre l'inutilité du mock de QueryBuilder
+### Exercice 3 — Deux tests pour un repository
 
 **Fichiers** :
-- `tests/Repository/OrderRepositoryMockTest.php` — le test mocké, vert mais inutile
-- `tests/Repository/OrderRepositoryIntegrationTest.php` — le test d'intégration, rouge à raison
+- `tests/Repository/OrderRepositoryMockTest.php`
+- `tests/Repository/OrderRepositoryIntegrationTest.php`
 
-Le test mocké vérifie que `QueryBuilder` est appelé avec certaines méthodes, mais ne lance jamais de requête SQL réelle. Le test d'intégration boote le kernel Symfony, branche une vraie base SQLite (versionnée dans `database/schema.sql`) et révèle un bug dans la requête.
+Le repository expose `findByStatus(string $status): array`. Deux tests vérifient ce comportement, l'un en mockant Doctrine, l'autre en lançant une vraie requête sur la base SQLite versionnée dans `database/schema.sql`.
 
 **Mission** :
-1. Lancer les deux tests.
-2. Constater que le test mocké passe alors que la requête est cassée.
-3. Comprendre pourquoi le test d'intégration échoue et corriger la requête.
-4. Optionnel : supprimer le test mocké, devenu inutile.
+1. Lancer les deux tests, comparer les résultats.
+2. Décider quel test apporte la vraie protection — et que faire de l'autre.
 
 ```bash
 make test-repository
@@ -83,30 +77,20 @@ make test-repository
 
 ---
 
-### Exercice 4 — Test fragile : corriger le test, pas le code
+### Exercice 4 — Pourquoi ce test casse ?
 
 **Fichier** : `tests/Processor/OrderProcessorTest.php`
 
-Ce test échoue. **Le code de production est correct** — c'est le test qui est sur-contraint :
+`OrderProcessor::process()` confirme une commande, envoie un email, logue. Le test échoue.
 
-- `expects($this->once())` partout, mélange Arrange et Assert
-- Comparaison stricte de l'objet `Email` complet (sur-spécification du transport)
-- Attentes sur la structure exacte des arguments du logger (rigide à toute évolution)
-- `setUp()` qui prépare les fixtures (anti-DAMP)
-- Re-vérifications redondantes après l'act
-
-**Mission** : refactoriser le test pour qu'il devienne **robuste**, **lisible**, et qu'il vérifie le **comportement** (la commande est confirmée, un email part au bon destinataire) plutôt que les détails d'implémentation.
+**Mission** :
+1. Lancer le test, identifier la cause de l'échec.
+2. Décider s'il faut corriger le code ou le test.
+3. Si c'est le test, le refactoriser pour qu'il devienne robuste, lisible, et qu'il vérifie le comportement plutôt que les détails d'implémentation (cf. bonnes pratiques vues en J2 : DAMP, AAA, Spy plutôt que Mock, Permissive Arrange / Strict Assert).
 
 ```bash
 make test-processor
 ```
-
-Appliquer les bonnes pratiques vues en J2 :
-- DAMP (pas de `setUp` fixtures)
-- AAA (Arrange / Act / Assert visuellement séparés)
-- Spy plutôt que Mock (`shouldHaveBeenCalled` après l'act)
-- Permissive Arrange / Strict Assert (`Argument::cetera()` en stub, `Argument::that(fn => assertEquals)` en spy)
-- Vérifier le **comportement**, pas l'implémentation
 
 ---
 
@@ -123,9 +107,9 @@ src/
 tests/
 ├── Controller/OrderControllerTest.php
 ├── Service/OrderImporterTest.php
-├── Repository/OrderRepositoryMockTest.php       # exo 3.a (à supprimer)
-├── Repository/OrderRepositoryIntegrationTest.php # exo 3.b (à corriger)
-└── Processor/OrderProcessorTest.php             # exo 4 (à refactor)
+├── Repository/OrderRepositoryMockTest.php
+├── Repository/OrderRepositoryIntegrationTest.php
+└── Processor/OrderProcessorTest.php
 
 database/
 ├── schema.sql      # versionné dans le repo
