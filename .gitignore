@@ -13,3 +13,6 @@ composer.lock
 
 # La DB est régénérée par bin/init-db.php avant chaque run de tests
 /database/data.db
+
+# Auto-généré par Symfony à chaque cache:clear
+/config/reference.php
