@@ -1,5 +1,5 @@
 {
-    "name": "conveycode/tautological-test",
+    "name": "conveycode/phpunit-tautological-test",
     "description": "PHPUnit training — exercices sur les tests tautologiques et anti-patterns",
     "type": "project",
     "license": "proprietary",
