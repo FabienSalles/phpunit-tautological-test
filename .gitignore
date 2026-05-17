@@ -16,3 +16,4 @@ composer.lock
 
 # Auto-généré par Symfony à chaque cache:clear
 /config/reference.php
+/.phpunit.result.cache
