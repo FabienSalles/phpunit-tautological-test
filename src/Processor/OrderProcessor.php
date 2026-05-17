@@ -15,6 +15,8 @@ use Symfony\Component\Mime\Email;
  */
 final class OrderProcessor
 {
+    public const STATUS_CONFIRMED = 'PAID';
+
     public function __construct(
         private readonly OrderRepository $orderRepository,
         private readonly MailerInterface $mailer,
@@ -24,7 +26,7 @@ final class OrderProcessor
 
     public function process(Order $order): void
     {
-        $order->status = 'CONFIRMED';
+        $order->status = self::STATUS_CONFIRMED;
         $this->orderRepository->save($order);
 
         $email = (new Email())

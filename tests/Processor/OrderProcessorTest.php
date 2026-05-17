@@ -37,21 +37,20 @@ final class OrderProcessorTest extends TestCase
             ->method('save')
             ->with(self::isInstanceOf(Order::class));
 
-        $expectedEmail = (new Email())
-            ->from('noreply@example.com')
-            ->to('alice@example.com')
-            ->subject('Order 42 confirmed')
-            ->text('Your order has been confirmed.');
-
         $this->mailer
             ->expects(self::once())
             ->method('send')
-            ->with(self::equalTo($expectedEmail));
+            ->willReturnCallback(function (Email $email): void {
+                self::assertSame('noreply@example.com', $email->getFrom()[0]->getAddress());
+                self::assertSame('bob@example.com', $email->getTo()[0]->getAddress());
+                self::assertSame('Order 42 confirmed', $email->getSubject());
+                self::assertSame('Your order has been confirmed.', $email->getTextBody());
+            });
 
         $this->logger
             ->expects(self::once())
             ->method('info')
-            ->with('Order processed', ['id' => 42]);
+            ->with('Order processed', ['id' => 42, 'customer' => 'alice']);
 
         $processor = new OrderProcessor(
             $this->repository,
@@ -61,6 +60,9 @@ final class OrderProcessorTest extends TestCase
 
         $processor->process($order);
 
+        self::assertSame(42, $order->id);
+        self::assertSame('alice', $order->customer);
+        self::assertSame(250.0, $order->total);
         self::assertSame('CONFIRMED', $order->status);
     }
 }
