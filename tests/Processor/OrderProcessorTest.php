@@ -7,68 +7,67 @@ namespace App\Tests\Processor;
 use App\Entity\Order;
 use App\Processor\OrderProcessor;
 use App\Repository\OrderRepository;
+use App\Tests\Doubles\StubbedMailer;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
 
 final class OrderProcessorTest extends TestCase
 {
     #[Test]
-    public function processConfirmsTheOrder(): void
+    public function processSavesTheConfirmedOrder(): void
     {
-        $order = new Order(42, 'alice', 250.0, 'PENDING');
+        $savedOrder = null;
+        $repository = $this->createMock(OrderRepository::class);
+        $repository->method('save')->willReturnCallback(
+            function (Order $order) use (&$savedOrder): void {
+                $savedOrder = $order;
+            },
+        );
         $processor = new OrderProcessor(
-            $this->createMock(OrderRepository::class),
-            $this->createMock(MailerInterface::class),
+            $repository,
+            new StubbedMailer(),
             $this->createMock(LoggerInterface::class),
         );
 
-        $processor->process($order);
+        $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
 
         self::assertEquals(
             new Order(42, 'alice', 250.0, 'CONFIRMED'),
-            $order,
+            $savedOrder,
         );
     }
 
     #[Test]
     public function processSendsAConfirmationEmail(): void
     {
-        $order = new Order(42, 'alice', 250.0, 'PENDING');
-        $sentEmail = null;
-        $mailer = $this->createMock(MailerInterface::class);
-        $mailer->method('send')->willReturnCallback(
-            function (Email $email) use (&$sentEmail): void {
-                $sentEmail = $email;
-            },
-        );
+        $mailer = new StubbedMailer();
         $processor = new OrderProcessor(
             $this->createMock(OrderRepository::class),
             $mailer,
             $this->createMock(LoggerInterface::class),
         );
 
-        $processor->process($order);
+        $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
 
+        $email = $mailer->lastEmail();
         self::assertSame([
             'from'    => 'noreply@example.com',
             'to'      => 'alice@example.com',
             'subject' => 'Order 42 confirmed',
             'body'    => 'Your order has been confirmed.',
         ], [
-            'from'    => $sentEmail?->getFrom()[0]?->getAddress(),
-            'to'      => $sentEmail?->getTo()[0]?->getAddress(),
-            'subject' => $sentEmail?->getSubject(),
-            'body'    => $sentEmail?->getTextBody(),
+            'from'    => $email?->getFrom()[0]?->getAddress(),
+            'to'      => $email?->getTo()[0]?->getAddress(),
+            'subject' => $email?->getSubject(),
+            'body'    => $email?->getTextBody(),
         ]);
     }
 
     #[Test]
     public function processLogsTheConfirmation(): void
     {
-        $order = new Order(42, 'alice', 250.0, 'PENDING');
         $logger = $this->createMock(LoggerInterface::class);
         $logger
             ->expects(self::once())
@@ -77,29 +76,10 @@ final class OrderProcessorTest extends TestCase
 
         $processor = new OrderProcessor(
             $this->createMock(OrderRepository::class),
-            $this->createMock(MailerInterface::class),
+            new StubbedMailer(),
             $logger,
         );
 
-        $processor->process($order);
-    }
-
-    #[Test]
-    public function processPersistsTheOrder(): void
-    {
-        $order = new Order(42, 'alice', 250.0, 'PENDING');
-        $repository = $this->createMock(OrderRepository::class);
-        $repository
-            ->expects(self::once())
-            ->method('save')
-            ->with($order);
-
-        $processor = new OrderProcessor(
-            $repository,
-            $this->createMock(MailerInterface::class),
-            $this->createMock(LoggerInterface::class),
-        );
-
-        $processor->process($order);
+        $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
     }
 }
