@@ -6,13 +6,14 @@ Chaque exercice reproduit un anti-pattern courant vu dans la formation (J2 — b
 
 ## Prérequis
 
-- PHP ≥ 8.2 avec extensions `pdo_sqlite`, `mbstring`
-- Composer
+- Docker + Docker Compose
+
+(rien d'autre — PHP, Composer et toutes les extensions tournent dans un container basé sur `php:8.3-cli`).
 
 ## Installation
 
 ```bash
-make install        # composer install + génération de la DB SQLite
+make install        # build de l'image, composer install, génération de la DB SQLite
 ```
 
 ## Lancer les tests
@@ -23,6 +24,7 @@ make test-controller       # exercice 1
 make test-service          # exercice 2
 make test-repository       # exercice 3
 make test-processor        # exercice 4
+make shell                 # bash interactif dans le container
 ```
 
 ---
