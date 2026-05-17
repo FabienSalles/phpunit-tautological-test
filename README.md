@@ -23,14 +23,14 @@ make tests                 # tous les tests
 make test-controller       # exercice 1
 make test-service          # exercice 2
 make test-repository       # exercice 3
-make test-processor        # exercice 4
-make test-calculator       # exercice 5
+make test-calculator       # exercice 4
+make test-processor        # exercice 5
 make shell                 # bash interactif dans le container
 ```
 
 ---
 
-## Les 4 exercices
+## Les 5 exercices
 
 ### Exercice 1 — Le test du contrôleur passe. Devrait-il ?
 
@@ -78,26 +78,7 @@ make test-repository
 
 ---
 
-### Exercice 4 — Pourquoi ce test casse ?
-
-**Fichier** : `tests/Processor/OrderProcessorTest.php`
-
-`OrderProcessor::process()` confirme une commande, envoie un email, logue. Le test échoue.
-
-**Mission** :
-1. Lancer le test, identifier la cause de l'échec.
-2. Décider s'il faut corriger le code ou le test.
-3. Si c'est le test, le refactoriser pour qu'il devienne robuste, lisible, et qu'il vérifie le comportement plutôt que les détails d'implémentation (cf. bonnes pratiques vues en J2 : DAMP, AAA, Spy plutôt que Mock, Permissive Arrange / Strict Assert).
-
-```bash
-make test-processor
-```
-
-Le test est écrit avec l'outil de doublure intégré à PHPUnit (`createMock`). Prophecy reste disponible si vous préférez (`phpspec/prophecy-phpunit` est en dev-dépendance).
-
----
-
-### Exercice 5 — Le calculateur de remise
+### Exercice 4 — Le calculateur de remise
 
 **Fichiers** :
 - `src/Calculator/OrderDiscountCalculator.php`
@@ -127,6 +108,25 @@ make test-calculator
 
 ---
 
+### Exercice 5 — Pourquoi ce test casse ?
+
+**Fichier** : `tests/Processor/OrderProcessorTest.php`
+
+`OrderProcessor::process()` confirme une commande, envoie un email, logue. Le test échoue.
+
+**Mission** :
+1. Lancer le test, identifier la cause de l'échec.
+2. Décider s'il faut corriger le code ou le test.
+3. Si c'est le test, le refactoriser pour qu'il devienne robuste, lisible, et qu'il vérifie le comportement plutôt que les détails d'implémentation (cf. bonnes pratiques vues en J2 : DAMP, AAA, Spy plutôt que Mock, Permissive Arrange / Strict Assert).
+
+```bash
+make test-processor
+```
+
+Le test est écrit avec l'outil de doublure intégré à PHPUnit (`createMock`). Prophecy reste disponible si vous préférez (`phpspec/prophecy-phpunit` est en dev-dépendance).
+
+---
+
 ## Structure
 
 ```
@@ -134,8 +134,8 @@ src/
 ├── Controller/OrderController.php           # exo 1
 ├── Service/OrderImporter.php                # exo 2
 ├── Repository/OrderRepository.php           # exo 3
-├── Processor/OrderProcessor.php             # exo 4
-├── Calculator/OrderDiscountCalculator.php   # exo 5
+├── Calculator/OrderDiscountCalculator.php   # exo 4
+├── Processor/OrderProcessor.php             # exo 5
 └── Entity/Order.php
 
 tests/
@@ -143,8 +143,8 @@ tests/
 ├── Service/OrderImporterTest.php
 ├── Repository/OrderRepositoryMockTest.php
 ├── Repository/OrderRepositoryIntegrationTest.php
-├── Processor/OrderProcessorTest.php
-└── Calculator/OrderDiscountCalculatorTest.php
+├── Calculator/OrderDiscountCalculatorTest.php
+└── Processor/OrderProcessorTest.php
 
 database/
 ├── schema.sql      # versionné dans le repo

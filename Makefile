@@ -26,11 +26,11 @@ test-service: ## Exercice 2 — Service
 test-repository: ## Exercice 3 — Repository (mocké + intégration)
 	$(DC) vendor/bin/phpunit --testsuite repository
 
-test-processor: ## Exercice 4 — Processor (test fragile)
-	$(DC) vendor/bin/phpunit --testsuite processor
-
-test-calculator: ## Exercice 5 — Calculator (test tautologique pur)
+test-calculator: ## Exercice 4 — Calculator (test tautologique pur)
 	$(DC) vendor/bin/phpunit --testsuite calculator
+
+test-processor: ## Exercice 5 — Processor (test fragile)
+	$(DC) vendor/bin/phpunit --testsuite processor
 
 shell: ## Ouvre un shell dans le container PHP
 	$(DC) bash
