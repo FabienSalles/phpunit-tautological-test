@@ -34,7 +34,7 @@ final class OrderImporterTest extends TestCase
             ->willReturn(new Order(1, 'John', 100.0, 'CONFIRMED'));
 
         $repository = $this->prophesize(OrderRepository::class);
-        $repository->save(Argument::type(Order::class))->willReturn(null);
+        $repository->save(Argument::type(Order::class));
 
         $importer = new OrderImporter(
             $serializer->reveal(),
