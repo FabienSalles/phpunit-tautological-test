@@ -93,6 +93,8 @@ make test-repository
 make test-processor
 ```
 
+Le test est écrit avec l'outil de doublure intégré à PHPUnit (`createMock`). Prophecy reste disponible si vous préférez (`phpspec/prophecy-phpunit` est en dev-dépendance).
+
 ---
 
 ### Exercice 5 — Le calculateur de remise

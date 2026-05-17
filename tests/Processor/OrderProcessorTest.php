@@ -8,39 +8,34 @@ use App\Entity\Order;
 use App\Processor\OrderProcessor;
 use App\Repository\OrderRepository;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 
 final class OrderProcessorTest extends TestCase
 {
-    use ProphecyTrait;
-
-    /** @var \Prophecy\Prophecy\ObjectProphecy<OrderRepository> */
-    private $repository;
-    /** @var \Prophecy\Prophecy\ObjectProphecy<MailerInterface> */
-    private $mailer;
-    /** @var \Prophecy\Prophecy\ObjectProphecy<LoggerInterface> */
-    private $logger;
+    private OrderRepository&MockObject $repository;
+    private MailerInterface&MockObject $mailer;
+    private LoggerInterface&MockObject $logger;
 
     protected function setUp(): void
     {
-        $this->repository = $this->prophesize(OrderRepository::class);
-        $this->mailer = $this->prophesize(MailerInterface::class);
-        $this->logger = $this->prophesize(LoggerInterface::class);
+        $this->repository = $this->createMock(OrderRepository::class);
+        $this->mailer = $this->createMock(MailerInterface::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
     }
 
     #[Test]
-    public function testProcessConfirmsOrderAndSendsEmailAndLogs(): void
+    public function processConfirmsOrderAndSendsEmailAndLogs(): void
     {
         $order = new Order(42, 'alice', 250.0, 'PENDING');
 
         $this->repository
-            ->save(Argument::type(Order::class))
-            ->shouldBeCalledTimes(1);
+            ->expects(self::once())
+            ->method('save')
+            ->with(self::isInstanceOf(Order::class));
 
         $expectedEmail = (new Email())
             ->from('noreply@example.com')
@@ -49,24 +44,22 @@ final class OrderProcessorTest extends TestCase
             ->text('Your order has been confirmed.');
 
         $this->mailer
-            ->send($expectedEmail)
-            ->shouldBeCalledTimes(1);
+            ->expects(self::once())
+            ->method('send')
+            ->with(self::equalTo($expectedEmail));
 
         $this->logger
-            ->info('Order processed', ['id' => 42])
-            ->shouldBeCalledTimes(1);
+            ->expects(self::once())
+            ->method('info')
+            ->with('Order processed', ['id' => 42]);
 
         $processor = new OrderProcessor(
-            $this->repository->reveal(),
-            $this->mailer->reveal(),
-            $this->logger->reveal(),
+            $this->repository,
+            $this->mailer,
+            $this->logger,
         );
 
         $processor->process($order);
-
-        $this->repository->save(Argument::type(Order::class))->shouldHaveBeenCalled();
-        $this->mailer->send($expectedEmail)->shouldHaveBeenCalled();
-        $this->logger->info('Order processed', ['id' => 42])->shouldHaveBeenCalled();
 
         self::assertSame('CONFIRMED', $order->status);
     }
