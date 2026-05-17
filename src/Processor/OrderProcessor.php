@@ -15,7 +15,7 @@ use Symfony\Component\Mime\Email;
  */
 final class OrderProcessor
 {
-    public const STATUS_CONFIRMED = 'PAID';
+    public const STATUS_CONFIRMED = 'CONFIRMED';
 
     public function __construct(
         private readonly OrderRepository $orderRepository,
