@@ -16,12 +16,27 @@ use Symfony\Component\Mime\Email;
 final class OrderProcessorTest extends TestCase
 {
     #[Test]
-    public function processConfirmsOrderAndSendsEmailAndLogs(): void
+    public function processConfirmsTheOrder(): void
     {
         $order = new Order(42, 'alice', 250.0, 'PENDING');
-        $repository = $this->createMock(OrderRepository::class);
-        $logger = $this->createMock(LoggerInterface::class);
+        $processor = new OrderProcessor(
+            $this->createMock(OrderRepository::class),
+            $this->createMock(MailerInterface::class),
+            $this->createMock(LoggerInterface::class),
+        );
 
+        $processor->process($order);
+
+        self::assertEquals(
+            new Order(42, 'alice', 250.0, 'CONFIRMED'),
+            $order,
+        );
+    }
+
+    #[Test]
+    public function processSendsAConfirmationEmail(): void
+    {
+        $order = new Order(42, 'alice', 250.0, 'PENDING');
         $sentEmail = null;
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->method('send')->willReturnCallback(
@@ -29,22 +44,14 @@ final class OrderProcessorTest extends TestCase
                 $sentEmail = $email;
             },
         );
-
-        $processor = new OrderProcessor($repository, $mailer, $logger);
+        $processor = new OrderProcessor(
+            $this->createMock(OrderRepository::class),
+            $mailer,
+            $this->createMock(LoggerInterface::class),
+        );
 
         $processor->process($order);
 
-        self::assertSame([
-            'id'       => 42,
-            'customer' => 'alice',
-            'total'    => 250.0,
-            'status'   => 'CONFIRMED',
-        ], [
-            'id'       => $order->id,
-            'customer' => $order->customer,
-            'total'    => $order->total,
-            'status'   => $order->status,
-        ]);
         self::assertSame([
             'from'    => 'noreply@example.com',
             'to'      => 'alice@example.com',
@@ -56,5 +63,43 @@ final class OrderProcessorTest extends TestCase
             'subject' => $sentEmail?->getSubject(),
             'body'    => $sentEmail?->getTextBody(),
         ]);
+    }
+
+    #[Test]
+    public function processLogsTheConfirmation(): void
+    {
+        $order = new Order(42, 'alice', 250.0, 'PENDING');
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects(self::once())
+            ->method('info')
+            ->with('Order processed', ['id' => 42, 'customer' => 'alice']);
+
+        $processor = new OrderProcessor(
+            $this->createMock(OrderRepository::class),
+            $this->createMock(MailerInterface::class),
+            $logger,
+        );
+
+        $processor->process($order);
+    }
+
+    #[Test]
+    public function processPersistsTheOrder(): void
+    {
+        $order = new Order(42, 'alice', 250.0, 'PENDING');
+        $repository = $this->createMock(OrderRepository::class);
+        $repository
+            ->expects(self::once())
+            ->method('save')
+            ->with($order);
+
+        $processor = new OrderProcessor(
+            $repository,
+            $this->createMock(MailerInterface::class),
+            $this->createMock(LoggerInterface::class),
+        );
+
+        $processor->process($order);
     }
 }
