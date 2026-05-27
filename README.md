@@ -2,13 +2,13 @@
 
 Projet Symfony d'exercices PHPUnit centrés sur les **tests tautologiques** et **anti-patterns** qui font passer des tests au vert alors qu'ils devraient être rouges (et inversement).
 
-Chaque exercice reproduit un anti-pattern courant vu dans la formation (J2 — bonnes pratiques de test, section « ce qu'il ne faut pas faire »).
+Chaque exercice reproduit un anti-pattern courant vu dans la formation (J2, bonnes pratiques de test, section « ce qu'il ne faut pas faire »).
 
 ## Prérequis
 
 - Docker + Docker Compose
 
-(rien d'autre — PHP, Composer et toutes les extensions tournent dans un container basé sur `php:8.3-cli`).
+(rien d'autre, PHP, Composer et toutes les extensions tournent dans un container basé sur `php:8.3-cli`).
 
 ## Installation
 
@@ -70,7 +70,7 @@ Le repository expose `findByStatus(string $status): array`. Deux tests vérifien
 
 **Mission** :
 1. Lancer les deux tests, comparer les résultats.
-2. Décider quel test apporte la vraie protection — et que faire de l'autre.
+2. Décider quel test apporte la vraie protection, et que faire de l'autre.
 
 ```bash
 make test-repository
@@ -104,7 +104,7 @@ Les 4 tests passent. La finance se plaint que les grosses commandes ne reçoiven
 make test-calculator
 ```
 
-> Lecture recommandée : [Randy Coulman — Tautological tests](https://randycoulman.com/blog/2016/12/20/tautological-tests/)
+> Lecture recommandée : [Randy Coulman, Tautological tests](https://randycoulman.com/blog/2016/12/20/tautological-tests/)
 
 ---
 
@@ -153,4 +153,4 @@ database/
 
 ## Référence
 
-Slides J2 — sections « Bonnes pratiques au niveau des tests » et « Ce qu'il ne faut PAS faire ».
+Slides J2, sections « Bonnes pratiques au niveau des tests » et « Ce qu'il ne faut PAS faire ».
