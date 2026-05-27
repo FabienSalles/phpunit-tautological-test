@@ -23,7 +23,10 @@ final class OrderRepositoryIntegrationTest extends KernelTestCase
         $confirmed = $repository->findByStatus('CONFIRMED');
 
         self::assertEquals(
-            [new Order(1, 'John',   100.0, 'CONFIRMED')],
+            [
+                new Order(1, 'John',   100.0, 'CONFIRMED'),
+                new Order(3, 'Bob', 175.5, 'CONFIRMED')
+            ],
             $confirmed,
         );
     }

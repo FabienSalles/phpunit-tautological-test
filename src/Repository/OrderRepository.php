@@ -33,7 +33,7 @@ class OrderRepository extends ServiceEntityRepository
     public function findByStatus(string $status): array
     {
         return $this->createQueryBuilder('o')
-            ->where('o.statu = :status')
+            ->where('o.status = :status')
             ->setParameter('status', $status)
             ->orderBy('o.id', 'ASC')
             ->getQuery()

@@ -11,7 +11,11 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\JsonSerializableNormalizer;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
+use Symfony\Component\Serializer\Serializer;
 
 final class OrderImporterTest extends TestCase
 {
@@ -23,21 +27,16 @@ final class OrderImporterTest extends TestCase
         $json = <<<'JSON'
         {
             "id": 1,
-            "customerName": "John",
+            "customer": "John",
             "total": 100,
             "status": "CONFIRMED"
         }
         JSON;
 
-        $serializer = $this->prophesize(SerializerInterface::class);
-        $serializer->deserialize(Argument::cetera())
-            ->willReturn(new Order(1, 'John', 100.0, 'CONFIRMED'));
-
         $repository = $this->prophesize(OrderRepository::class);
-        $repository->save(Argument::type(Order::class));
 
         $importer = new OrderImporter(
-            $serializer->reveal(),
+            new Serializer([new ObjectNormalizer()], [new JsonEncoder()]),
             $repository->reveal(),
         );
 
