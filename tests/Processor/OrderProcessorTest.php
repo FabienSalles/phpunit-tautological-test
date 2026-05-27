@@ -16,38 +16,24 @@ use Symfony\Component\Mailer\MailerInterface;
 final class OrderProcessorTest extends TestCase
 {
     #[Test]
-    public function processSavesTheConfirmedOrder(): void
+    public function processLogsTheConfirmation(): void
     {
-        $savedOrder = null;
-        $repository = $this->createMock(OrderRepository::class);
-        $repository->method('save')->willReturnCallback(
-            function (Order $order) use (&$savedOrder): void {
-                $savedOrder = $order;
-            },
-        );
-        $processor = new OrderProcessor(
-            $repository,
-            new StubbedMailer(),
-            $this->createMock(LoggerInterface::class),
-        );
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects($this->once())
+            ->method('info')
+            ->with('Order processed', ['id' => 42, 'customer' => 'alice']);
+
+        $processor = $this->createOrderProcessor(logger: $logger);
 
         $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
-
-        self::assertEquals(
-            new Order(42, 'alice', 250.0, 'CONFIRMED'),
-            $savedOrder,
-        );
     }
 
     #[Test]
     public function processSendsAConfirmationEmail(): void
     {
         $mailer = new StubbedMailer();
-        $processor = new OrderProcessor(
-            $this->createMock(OrderRepository::class),
-            $mailer,
-            $this->createMock(LoggerInterface::class),
-        );
+        $processor = $this->createOrderProcessor(mailer: $mailer);
 
         $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
 
@@ -66,20 +52,43 @@ final class OrderProcessorTest extends TestCase
     }
 
     #[Test]
-    public function processLogsTheConfirmation(): void
+    public function processSavesTheConfirmedOrder(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger
-            ->expects(self::once())
-            ->method('info')
-            ->with('Order processed', ['id' => 42, 'customer' => 'alice']);
-
-        $processor = new OrderProcessor(
-            $this->createMock(OrderRepository::class),
-            new StubbedMailer(),
-            $logger,
+        $savedOrder = null;
+        $processor = $this->createOrderProcessor(
+            repository: $this->mockRepository($savedOrder),
         );
 
         $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
+
+        self::assertEquals(
+            new Order(42, 'alice', 250.0, 'CONFIRMED'),
+            $savedOrder,
+        );
+    }
+
+    private function mockRepository(?Order &$savedOrder): OrderRepository
+    {
+        $repository = $this->createMock(OrderRepository::class);
+        $repository->method('save')->willReturnCallback(
+            function (Order $order) use (&$savedOrder): void {
+                $savedOrder = $order;
+            },
+        );
+
+        return $repository;
+    }
+
+    private function createOrderProcessor(
+        ?OrderRepository $repository = null,
+        ?MailerInterface $mailer  = null,
+        ?LoggerInterface $logger = null
+    ): OrderProcessor
+    {
+        return new OrderProcessor(
+            $repository ?? $this->createStub(OrderRepository::class),
+            $mailer ?? $this->createStub(MailerInterface::class),
+            $logger ?? $this->createMock(LoggerInterface::class)
+        );
     }
 }
