@@ -13,18 +13,18 @@ class Order
 {
     #[ORM\Id]
     #[ORM\Column(type: 'integer')]
-    public int $id;
+    public ?int $id;
 
     #[ORM\Column(type: 'string', length: 255)]
-    public string $customer;
+    public ?string $customer;
 
     #[ORM\Column(type: 'float')]
-    public float $total;
+    public ?float $total;
 
     #[ORM\Column(type: 'string', length: 32)]
-    public string $status;
+    public ?string $status;
 
-    public function __construct(int $id, string $customer, float $total, string $status)
+    public function __construct(?int $id = null, ?string $customer = null, ?float $total = null, ?string $status = null)
     {
         $this->id = $id;
         $this->customer = $customer;

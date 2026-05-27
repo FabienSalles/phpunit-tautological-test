@@ -12,6 +12,7 @@
         "symfony/framework-bundle": "^7.0",
         "symfony/mailer": "^7.0",
         "symfony/mime": "^7.0",
+        "symfony/property-access": "^7.4",
         "symfony/runtime": "^7.0",
         "symfony/serializer": "^7.0",
         "symfony/yaml": "^7.0"
