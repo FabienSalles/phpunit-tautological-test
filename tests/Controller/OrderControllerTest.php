@@ -18,6 +18,6 @@ final class OrderControllerTest extends WebTestCase
         $client->request('POST', '/orders/1/confirm');
 
         $payload = json_decode($client->getResponse()->getContent(), true);
-        self::assertSame(OrderController::STATUS_CONFIRMED, $payload['status']);
+        self::assertSame("CONFIRMED", $payload['status']);
     }
 }

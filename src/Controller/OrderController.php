@@ -13,7 +13,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 final class OrderController
 {
-    public const STATUS_CONFIRMED = 'PAID';
+    public const STATUS_CONFIRMED = 'CONFIRMED';
 
     public function __construct(
         private readonly OrderRepository $orderRepository,
