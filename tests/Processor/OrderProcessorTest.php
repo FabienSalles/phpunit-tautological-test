@@ -7,22 +7,25 @@ namespace App\Tests\Processor;
 use App\Entity\Order;
 use App\Processor\OrderProcessor;
 use App\Repository\OrderRepository;
+use App\Tests\Doubles\StubbedMailer;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
+use Psr\Log\NullLogger;
 
 final class OrderProcessorTest extends TestCase
 {
+    use ProphecyTrait;
+
     #[Test]
     public function processConfirmsTheOrder(): void
     {
         $order = new Order(42, 'alice', 250.0, 'PENDING');
         $processor = new OrderProcessor(
-            $this->createMock(OrderRepository::class),
-            $this->createMock(MailerInterface::class),
-            $this->createMock(LoggerInterface::class),
+            $this->prophesize(OrderRepository::class)->reveal(),
+            new StubbedMailer(),
+            new NullLogger(),
         );
 
         $processor->process($order);
@@ -36,22 +39,16 @@ final class OrderProcessorTest extends TestCase
     #[Test]
     public function processSendsAConfirmationEmail(): void
     {
-        $order = new Order(42, 'alice', 250.0, 'PENDING');
-        $sentEmail = null;
-        $mailer = $this->createMock(MailerInterface::class);
-        $mailer->method('send')->willReturnCallback(
-            function (Email $email) use (&$sentEmail): void {
-                $sentEmail = $email;
-            },
-        );
+        $mailer = new StubbedMailer();
         $processor = new OrderProcessor(
-            $this->createMock(OrderRepository::class),
+            $this->prophesize(OrderRepository::class)->reveal(),
             $mailer,
-            $this->createMock(LoggerInterface::class),
+            new NullLogger(),
         );
 
-        $processor->process($order);
+        $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
 
+        $sentEmail = $mailer->lastEmail();
         self::assertSame([
             'from'    => 'noreply@example.com',
             'to'      => 'alice@example.com',
@@ -68,38 +65,31 @@ final class OrderProcessorTest extends TestCase
     #[Test]
     public function processLogsTheConfirmation(): void
     {
-        $order = new Order(42, 'alice', 250.0, 'PENDING');
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger
-            ->expects(self::once())
-            ->method('info')
-            ->with('Order processed', ['id' => 42, 'customer' => 'alice']);
-
+        $logger = $this->prophesize(LoggerInterface::class);
         $processor = new OrderProcessor(
-            $this->createMock(OrderRepository::class),
-            $this->createMock(MailerInterface::class),
-            $logger,
+            $this->prophesize(OrderRepository::class)->reveal(),
+            new StubbedMailer(),
+            $logger->reveal(),
         );
 
-        $processor->process($order);
+        $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
+
+        $logger->info('Order processed', ['id' => 42, 'customer' => 'alice'])->shouldHaveBeenCalled();
     }
 
     #[Test]
     public function processPersistsTheOrder(): void
     {
         $order = new Order(42, 'alice', 250.0, 'PENDING');
-        $repository = $this->createMock(OrderRepository::class);
-        $repository
-            ->expects(self::once())
-            ->method('save')
-            ->with($order);
-
+        $repository = $this->prophesize(OrderRepository::class);
         $processor = new OrderProcessor(
-            $repository,
-            $this->createMock(MailerInterface::class),
-            $this->createMock(LoggerInterface::class),
+            $repository->reveal(),
+            new StubbedMailer(),
+            new NullLogger(),
         );
 
         $processor->process($order);
+
+        $repository->save($order)->shouldHaveBeenCalled();
     }
 }
