@@ -20,7 +20,7 @@ final class OrderDiscountCalculator
     public function discount(Order $order): float
     {
         if ($order->total >= 500) {
-            return $order->total * 0.10;
+            return $order->total * 0.15;
         }
 
         if ($order->total >= 200) {
