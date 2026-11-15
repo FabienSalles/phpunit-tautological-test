@@ -10,23 +10,24 @@ use App\Repository\OrderRepository;
 use App\Tests\Doubles\StubbedMailer;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\Mailer\MailerInterface;
 
 final class OrderProcessorTest extends TestCase
 {
+    use ProphecyTrait;
+
     #[Test]
     public function processLogsTheConfirmation(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger
-            ->expects($this->once())
-            ->method('info')
-            ->with('Order processed', ['id' => 42, 'customer' => 'alice']);
-
-        $processor = $this->createOrderProcessor(logger: $logger);
+        $logger = $this->prophesize(LoggerInterface::class);
+        $processor = $this->createOrderProcessor(logger: $logger->reveal());
 
         $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
+
+        $logger->info('Order processed', ['id' => 42, 'customer' => 'alice'])->shouldHaveBeenCalled();
     }
 
     #[Test]
@@ -54,29 +55,12 @@ final class OrderProcessorTest extends TestCase
     #[Test]
     public function processSavesTheConfirmedOrder(): void
     {
-        $savedOrder = null;
-        $processor = $this->createOrderProcessor(
-            repository: $this->mockRepository($savedOrder),
-        );
+        $repository = $this->prophesize(OrderRepository::class);
+        $processor = $this->createOrderProcessor(repository: $repository->reveal());
 
         $processor->process(new Order(42, 'alice', 250.0, 'PENDING'));
 
-        self::assertEquals(
-            new Order(42, 'alice', 250.0, 'CONFIRMED'),
-            $savedOrder,
-        );
-    }
-
-    private function mockRepository(?Order &$savedOrder): OrderRepository
-    {
-        $repository = $this->createMock(OrderRepository::class);
-        $repository->method('save')->willReturnCallback(
-            function (Order $order) use (&$savedOrder): void {
-                $savedOrder = $order;
-            },
-        );
-
-        return $repository;
+        $repository->save(new Order(42, 'alice', 250.0, 'CONFIRMED'))->shouldHaveBeenCalled();
     }
 
     private function createOrderProcessor(
@@ -86,9 +70,9 @@ final class OrderProcessorTest extends TestCase
     ): OrderProcessor
     {
         return new OrderProcessor(
-            $repository ?? $this->createStub(OrderRepository::class),
-            $mailer ?? $this->createStub(MailerInterface::class),
-            $logger ?? $this->createMock(LoggerInterface::class)
+            $repository ?? $this->prophesize(OrderRepository::class)->reveal(),
+            $mailer ?? new StubbedMailer(),
+            $logger ?? new NullLogger()
         );
     }
 }
